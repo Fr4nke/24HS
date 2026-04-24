@@ -1,0 +1,23 @@
+# Android
+*.iml
+.gradle/
+local.properties
+.idea/
+*.keystore
+!debug.keystore
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+
+# Next.js
+.next/
+node_modules/
+.env.local
+.env*.local
+
+# General
+.DS_Store
+*.log
