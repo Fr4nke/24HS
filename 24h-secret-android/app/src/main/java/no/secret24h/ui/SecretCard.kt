@@ -18,6 +18,7 @@ import kotlinx.coroutines.delay
 import no.secret24h.data.MOOD_EMOJIS
 import no.secret24h.data.Secret
 import java.time.Instant
+import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 
 val MOOD_COLORS = mapOf(
@@ -34,12 +35,17 @@ fun Countdown(expiresAt: String) {
 
     LaunchedEffect(expiresAt) {
         while (true) {
-            val diff = ChronoUnit.SECONDS.between(Instant.now(), Instant.parse(expiresAt))
-            timeLeft = if (diff <= 0) "Utløpt" else {
-                val h = diff / 3600
-                val m = (diff % 3600) / 60
-                val s = diff % 60
-                "${h}t ${m}m ${s}s"
+            try {
+                val expiry = OffsetDateTime.parse(expiresAt).toInstant()
+                val diff = ChronoUnit.SECONDS.between(Instant.now(), expiry)
+                timeLeft = if (diff <= 0) "Utløpt" else {
+                    val h = diff / 3600
+                    val m = (diff % 3600) / 60
+                    val s = diff % 60
+                    "${h}t ${m}m ${s}s"
+                }
+            } catch (_: Exception) {
+                timeLeft = "?"
             }
             delay(1000)
         }
