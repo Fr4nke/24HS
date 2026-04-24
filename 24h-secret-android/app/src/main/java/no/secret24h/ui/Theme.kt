@@ -11,32 +11,28 @@ import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.googlefonts.Font
-import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import no.secret24h.R
 
-// ── Palette ──────────────────────────────────────────────────────────────────
-val DuskBg        = Color(0xFF0C0A1A)
-val DuskSurface   = Color(0x0AFFFFFF)   // rgba(255,255,255,0.04)
-val DuskBorder    = Color(0x14FFFFFF)   // rgba(255,255,255,0.08)
-val DuskAccent    = Color(0xFFB69DFF)
-val DuskGlow      = Color(0xFF7C5CFC)
-val DuskText      = Color(0xFFF0EEFF)
-val DuskMuted     = Color(0xFF8B88A4)
-val DuskCardBg    = Color(0x0DFFFFFF)   // rgba(255,255,255,0.05)
+// ── Palette ───────────────────────────────────────────────────────────────────
+val DuskBg      = Color(0xFF0C0A1A)
+val DuskBorder  = Color(0x14FFFFFF)
+val DuskAccent  = Color(0xFFB69DFF)
+val DuskGlow    = Color(0xFF7C5CFC)
+val DuskText    = Color(0xFFF0EEFF)
+val DuskMuted   = Color(0xFF8B88A4)
+val DuskCardBg  = Color(0x0DFFFFFF)
 
-// Legacy aliases kept so other files compile without change
-val VioletLight   = DuskAccent
-val Zinc600       = DuskMuted
-val Zinc700       = Color(0xFF3F3A55)
-val Zinc800       = Color(0xFF1E1B2E)
-val Zinc900       = Color(0xFF13111F)
+// Legacy aliases
+val VioletLight = DuskAccent
+val Zinc600     = DuskMuted
+val Zinc700     = Color(0xFF3F3A55)
+val Zinc800     = Color(0xFF1E1B2E)
+val Zinc900     = Color(0xFF13111F)
 
 // ── Emotion colors ────────────────────────────────────────────────────────────
 data class EmotionColors(val bg: Color, val fg: Color, val glow: Color)
@@ -49,42 +45,29 @@ val EMOTION_COLORS = mapOf(
     "annet"    to EmotionColors(Color(0xFF18162A), Color(0xFF8B88A4), Color(0xFF5C5980)),
 )
 
-// ── Google Fonts ──────────────────────────────────────────────────────────────
-private val fontProvider = GoogleFont.Provider(
-    providerAuthority = "com.google.android.gms.fonts",
-    providerPackage   = "com.google.android.gms",
-    certificates      = R.array.com_google_android_gms_fonts_certs,
-)
+// ── Fonts (system) ────────────────────────────────────────────────────────────
+val InstrumentSerif = FontFamily.Serif
+val GeistFamily     = FontFamily.Default
 
-val InstrumentSerif = FontFamily(
-    Font(googleFont = GoogleFont("Instrument Serif"), fontProvider = fontProvider, weight = FontWeight.Normal),
-)
-
-val GeistFamily = FontFamily(
-    Font(googleFont = GoogleFont("Geist"), fontProvider = fontProvider, weight = FontWeight.Normal),
-    Font(googleFont = GoogleFont("Geist"), fontProvider = fontProvider, weight = FontWeight.Medium),
-    Font(googleFont = GoogleFont("Geist"), fontProvider = fontProvider, weight = FontWeight.Bold),
-)
-
-// ── Theme ─────────────────────────────────────────────────────────────────────
+// ── Color scheme ──────────────────────────────────────────────────────────────
 private val colorScheme = darkColorScheme(
-    background        = DuskBg,
-    surface           = Zinc900,
-    surfaceVariant    = Zinc800,
-    primary           = DuskAccent,
-    onPrimary         = Color.White,
-    onBackground      = DuskText,
-    onSurface         = DuskText,
-    onSurfaceVariant  = DuskMuted,
-    error             = Color(0xFFFF6B8A),
+    background       = DuskBg,
+    surface          = Zinc900,
+    surfaceVariant   = Zinc800,
+    primary          = DuskAccent,
+    onPrimary        = Color.White,
+    onBackground     = DuskText,
+    onSurface        = DuskText,
+    onSurfaceVariant = DuskMuted,
+    error            = Color(0xFFFF6B8A),
 )
 
 private val typography = Typography(
-    displayLarge  = TextStyle(fontFamily = InstrumentSerif, fontSize = 36.sp),
-    headlineMedium = TextStyle(fontFamily = InstrumentSerif, fontSize = 24.sp),
-    bodyLarge     = TextStyle(fontFamily = GeistFamily, fontSize = 15.sp, lineHeight = 22.sp),
-    bodyMedium    = TextStyle(fontFamily = GeistFamily, fontSize = 13.sp),
-    labelSmall    = TextStyle(fontFamily = GeistFamily, fontSize = 11.sp),
+    displayLarge   = TextStyle(fontFamily = FontFamily.Serif, fontSize = 36.sp),
+    headlineMedium = TextStyle(fontFamily = FontFamily.Serif, fontSize = 24.sp),
+    bodyLarge      = TextStyle(fontFamily = FontFamily.Default, fontSize = 15.sp, lineHeight = 22.sp),
+    bodyMedium     = TextStyle(fontFamily = FontFamily.Default, fontSize = 13.sp),
+    labelSmall     = TextStyle(fontFamily = FontFamily.Default, fontSize = 11.sp),
 )
 
 @Composable
