@@ -22,26 +22,26 @@ object Api {
             .header("Content-Type", "application/json")
 
     private fun JSONObject.toSecret() = Secret(
-        id = getString("id"),
-        text = getString("text"),
-        mood = optString("mood", "annet"),
-        expiresAt = getString("expires_at"),
-        reactionMeToo = optInt("reaction_me_too", 0),
-        reactionHeart = optInt("reaction_heart", 0),
+        id              = getString("id"),
+        text            = getString("text"),
+        mood            = optString("mood", "annet"),
+        expiresAt       = getString("expires_at"),
+        reactionMeToo   = optInt("reaction_me_too", 0),
+        reactionWild    = optInt("reaction_wild", 0),
+        reactionDoubtful = optInt("reaction_doubtful", 0),
     )
 
     suspend fun getSecrets(sort: Sort): List<Secret> = withContext(Dispatchers.IO) {
         val order = if (sort == Sort.Top) "reaction_me_too.desc" else "created_at.desc"
         val now = Instant.now().toString()
         val req = baseRequest(
-            "/rest/v1/secrets?select=id,text,mood,expires_at,reaction_me_too,reaction_heart" +
+            "/rest/v1/secrets?select=id,text,mood,expires_at,reaction_me_too,reaction_wild,reaction_doubtful" +
             "&expires_at=gt.$now&order=$order&limit=50"
         ).get().build()
 
         client.newCall(req).execute().use { res ->
             if (!res.isSuccessful) throw Exception("Feil: ${res.code}")
-            val body = res.body!!.string()
-            val arr = JSONArray(body)
+            val arr = JSONArray(res.body!!.string())
             List(arr.length()) { arr.getJSONObject(it).toSecret() }
         }
     }

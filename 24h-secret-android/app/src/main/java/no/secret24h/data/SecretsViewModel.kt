@@ -48,17 +48,26 @@ class SecretsViewModel : ViewModel() {
                 onDone()
             } catch (e: Exception) {
                 _state.value = _state.value.copy(error = e.message)
+                onDone()
             }
         }
     }
 
     fun react(secretId: String, type: String) {
-        val col = if (type == "me_too") "reaction_me_too" else "reaction_heart"
+        val col = when (type) {
+            "me_too"   -> "reaction_me_too"
+            "wild"     -> "reaction_wild"
+            "doubtful" -> "reaction_doubtful"
+            else -> return
+        }
         _state.value = _state.value.copy(
             secrets = _state.value.secrets.map { s ->
-                if (s.id != secretId) s
-                else if (type == "me_too") s.copy(reactionMeToo = s.reactionMeToo + 1)
-                else s.copy(reactionHeart = s.reactionHeart + 1)
+                if (s.id != secretId) s else when (type) {
+                    "me_too"   -> s.copy(reactionMeToo = s.reactionMeToo + 1)
+                    "wild"     -> s.copy(reactionWild = s.reactionWild + 1)
+                    "doubtful" -> s.copy(reactionDoubtful = s.reactionDoubtful + 1)
+                    else -> s
+                }
             }
         )
         viewModelScope.launch {

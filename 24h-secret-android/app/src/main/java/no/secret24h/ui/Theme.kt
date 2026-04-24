@@ -12,62 +12,71 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// ── Palette ───────────────────────────────────────────────────────────────────
-val DuskBg      = Color(0xFF0C0A1A)
-val DuskBorder  = Color(0x14FFFFFF)
-val DuskAccent  = Color(0xFFB69DFF)
-val DuskGlow    = Color(0xFF7C5CFC)
-val DuskText    = Color(0xFFF0EEFF)
-val DuskMuted   = Color(0xFF8B88A4)
-val DuskCardBg  = Color(0x0DFFFFFF)
+// ── Smolder palette ───────────────────────────────────────────────────────────
+val SmBg          = Color(0xFF120608)
+val SmSurface     = Color(0x0AFFC8B4)   // rgba(255,200,180,0.04)
+val SmBorder      = Color(0x1AFF8C6E)   // rgba(255,140,110,0.10)
+val SmText        = Color(0xFFFFE8DC)
+val SmTextDim     = Color(0x8CFFE8DC)   // 55% opacity
+val SmTextFaint   = Color(0x4DFFE8DC)   // 30% opacity
+val SmAccent      = Color(0xFFFF7A4D)
+val SmAccentGlow  = Color(0x99FF7A4D)   // 60% opacity
+val SmAccentDeep  = Color(0xFFC83018)
 
-// Legacy aliases
-val VioletLight = DuskAccent
-val Zinc600     = DuskMuted
-val Zinc700     = Color(0xFF3F3A55)
-val Zinc800     = Color(0xFF1E1B2E)
-val Zinc900     = Color(0xFF13111F)
+// Legacy aliases used in other files
+val VioletLight   = SmAccent
+val Zinc600       = SmTextDim
+val Zinc700       = Color(0xFF3A1A10)
+val Zinc800       = Color(0xFF1E0C09)
+val Zinc900       = Color(0xFF160806)
+val DuskBg        = SmBg
+val DuskBorder    = SmBorder
+val DuskAccent    = SmAccent
+val DuskGlow      = SmAccentGlow
+val DuskText      = SmText
+val DuskMuted     = SmTextDim
+val DuskCardBg    = SmSurface
 
-// ── Emotion colors ────────────────────────────────────────────────────────────
+// ── Emotion colors (oklch(72% 0.2 <hue>) approximated) ───────────────────────
 data class EmotionColors(val bg: Color, val fg: Color, val glow: Color)
 
 val EMOTION_COLORS = mapOf(
-    "lettelse" to EmotionColors(Color(0xFF0D1F42), Color(0xFF5B8FFF), Color(0xFF3D6AFF)),
-    "skam"     to EmotionColors(Color(0xFF3D0A1A), Color(0xFFFF6B8A), Color(0xFFFF3D6B)),
-    "stolthet" to EmotionColors(Color(0xFF3D2A00), Color(0xFFFFD166), Color(0xFFFFB800)),
-    "anger"    to EmotionColors(Color(0xFF3D1500), Color(0xFFFF784F), Color(0xFFFF4D1A)),
-    "annet"    to EmotionColors(Color(0xFF18162A), Color(0xFF8B88A4), Color(0xFF5C5980)),
+    "lettelse" to EmotionColors(Color(0xFF0D1A3A), Color(0xFF7B77FF), Color(0xFF5A55EE)),
+    "skam"     to EmotionColors(Color(0xFF3A1008), Color(0xFFFF7A5A), Color(0xFFEE5533)),
+    "stolthet" to EmotionColors(Color(0xFF3A2800), Color(0xFFFFAD45), Color(0xFFEE9400)),
+    "anger"    to EmotionColors(Color(0xFF0A1E30), Color(0xFF4AADFF), Color(0xFF2288EE)),
+    "lengsel"  to EmotionColors(Color(0xFF1E0A3A), Color(0xFFAB7BFF), Color(0xFF8855EE)),
+    "sinne"    to EmotionColors(Color(0xFF3A0808), Color(0xFFFF5F5F), Color(0xFFEE3333)),
+    "frykt"    to EmotionColors(Color(0xFF003A30), Color(0xFF42F0D4), Color(0xFF00CCAA)),
+    "glede"    to EmotionColors(Color(0xFF3A0030), Color(0xFFFF6ADB), Color(0xFFEE3DC0)),
+    "annet"    to EmotionColors(Color(0xFF1A1210), Color(0xFF9E8880), Color(0xFF6E5850)),
 )
 
-// ── Fonts (system) ────────────────────────────────────────────────────────────
+// ── Fonts ─────────────────────────────────────────────────────────────────────
 val InstrumentSerif = FontFamily.Serif
 val GeistFamily     = FontFamily.Default
 
 // ── Color scheme ──────────────────────────────────────────────────────────────
 private val colorScheme = darkColorScheme(
-    background       = DuskBg,
+    background       = SmBg,
     surface          = Zinc900,
     surfaceVariant   = Zinc800,
-    primary          = DuskAccent,
+    primary          = SmAccent,
     onPrimary        = Color.White,
-    onBackground     = DuskText,
-    onSurface        = DuskText,
-    onSurfaceVariant = DuskMuted,
-    error            = Color(0xFFFF6B8A),
+    onBackground     = SmText,
+    onSurface        = SmText,
+    onSurfaceVariant = SmTextDim,
+    error            = Color(0xFFFF5F5F),
 )
 
 private val typography = Typography(
-    displayLarge   = TextStyle(fontFamily = FontFamily.Serif, fontSize = 36.sp),
-    headlineMedium = TextStyle(fontFamily = FontFamily.Serif, fontSize = 24.sp),
-    bodyLarge      = TextStyle(fontFamily = FontFamily.Default, fontSize = 15.sp, lineHeight = 22.sp),
-    bodyMedium     = TextStyle(fontFamily = FontFamily.Default, fontSize = 13.sp),
-    labelSmall     = TextStyle(fontFamily = FontFamily.Default, fontSize = 11.sp),
+    bodyLarge  = TextStyle(fontFamily = FontFamily.Default, fontSize = 15.sp, lineHeight = 22.sp),
+    bodyMedium = TextStyle(fontFamily = FontFamily.Default, fontSize = 13.sp),
+    labelSmall = TextStyle(fontFamily = FontFamily.Default, fontSize = 11.sp),
 )
 
 @Composable
