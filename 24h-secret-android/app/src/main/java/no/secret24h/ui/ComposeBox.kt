@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.sp
 import no.secret24h.data.MOOD_EMOJIS
 import no.secret24h.data.MOODS
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ComposeBox(
     isSending: Boolean,
@@ -57,8 +58,12 @@ fun ComposeBox(
             },
         )
 
-        // Mood chips
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+        // Mood chips — FlowRow wrapper automatisk
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
             MOODS.forEach { m ->
                 val selected = m == mood
                 Surface(
