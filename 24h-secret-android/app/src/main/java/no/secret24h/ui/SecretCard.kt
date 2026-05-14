@@ -1,5 +1,6 @@
 package no.secret24h.ui
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -11,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,9 +61,26 @@ fun SecretCard(
 ) {
     val rankColors = mapOf(1 to Color(0xFFFFAD45), 2 to Color(0xFFB0A8A0), 3 to Color(0xFFCD8847))
     val emotion = EMOTION_COLORS[secret.mood] ?: EMOTION_COLORS["annet"]!!
+    val context = LocalContext.current
 
     // Show whisper button if secret has a userId that is not the current user
     val showWhisper = secret.userId != null && secret.userId != UserSession.userId
+
+    val onShare = {
+        val emoji = MOOD_EMOJIS[secret.mood] ?: "🤫"
+        val shareText = buildString {
+            appendLine("🤫 \"${secret.text}\"")
+            appendLine()
+            appendLine("$emoji ${secret.mood} · disappears in 24h")
+            appendLine()
+            append("Share your own secret anonymously on 24h Secret 👇")
+        }
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, shareText)
+        }
+        context.startActivity(Intent.createChooser(intent, null))
+    }
 
     Box(modifier = Modifier.fillMaxWidth()) {
         Box(
@@ -116,9 +135,30 @@ fun SecretCard(
                         ReactionButton("🤨", "doubtful", secret.reactionDoubtful, reactedDoubtful, Color(0xFF42F0D4)) { onReact("doubtful") }
                     }
 
-                    if (showWhisper && onWhisper != null) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        if (showWhisper && onWhisper != null) {
+                            Surface(
+                                onClick = { onWhisper(secret.id, secret.userId!!) },
+                                shape = RoundedCornerShape(100.dp),
+                                color = Color.Transparent,
+                                modifier = Modifier
+                                    .height(28.dp)
+                                    .border(1.dp, SmBorder, RoundedCornerShape(100.dp))
+                                    .background(Color(0x14FFFFFF), RoundedCornerShape(100.dp)),
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 9.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                ) {
+                                    Text("💬", fontSize = 12.sp)
+                                    Text("Whisper", fontSize = 10.sp, color = SmTextDim)
+                                }
+                            }
+                        }
+
                         Surface(
-                            onClick = { onWhisper(secret.id, secret.userId!!) },
+                            onClick = onShare,
                             shape = RoundedCornerShape(100.dp),
                             color = Color.Transparent,
                             modifier = Modifier
@@ -131,8 +171,8 @@ fun SecretCard(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                             ) {
-                                Text("💬", fontSize = 12.sp)
-                                Text("Whisper", fontSize = 10.sp, color = SmTextDim)
+                                Text("↗", fontSize = 12.sp, color = SmTextDim)
+                                Text("Share", fontSize = 10.sp, color = SmTextDim)
                             }
                         }
                     }
