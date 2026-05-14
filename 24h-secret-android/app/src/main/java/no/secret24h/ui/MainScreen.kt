@@ -1,5 +1,10 @@
 package no.secret24h.ui
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
@@ -19,13 +24,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -33,6 +41,14 @@ import no.secret24h.data.MOODS
 import no.secret24h.data.SecretsViewModel
 import no.secret24h.data.Sort
 import no.secret24h.data.UserSession
+
+private val DISTANCE_OPTIONS = listOf(
+    null        to "🌍 Everywhere",
+    1.0         to "1 km",
+    10.0        to "10 km",
+    100.0       to "100 km",
+    1000.0      to "1000 km",
+)
 
 @Composable
 fun MainScreen(
@@ -43,12 +59,56 @@ fun MainScreen(
     var isSending by remember { mutableStateOf(false) }
     val reactedIds = remember { mutableStateMapOf<String, Set<String>>() }
     var isLoggedIn by remember { mutableStateOf(UserSession.isLoggedIn) }
+    val context = LocalContext.current
 
-    // Refresh login state when screen is recomposed after coming back from auth
+    // ── Disclaimer (first run) ──────────────────────────────────────────────
+    var showDisclaimer by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         isLoggedIn = UserSession.isLoggedIn
+        val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        if (!prefs.getBoolean("disclaimer_shown", false)) showDisclaimer = true
     }
 
+    // ── Location permission ─────────────────────────────────────────────────
+    var pendingDistanceKm by remember { mutableStateOf<Double?>(null) }
+    var locationDenied by remember { mutableStateOf(false) }
+
+    fun hasLocationPerm() = ContextCompat.checkSelfPermission(
+        context, Manifest.permission.ACCESS_COARSE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED
+
+    val locationPermLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        val granted = results.values.any { it }
+        val km = pendingDistanceKm
+        pendingDistanceKm = null
+        if (granted && km != null) {
+            locationDenied = false
+            vm.setDistanceFilter(km)
+        } else {
+            locationDenied = true
+        }
+    }
+
+    fun onDistanceChipClick(km: Double?) {
+        locationDenied = false
+        if (km == null) {
+            vm.setDistanceFilter(null)
+        } else if (hasLocationPerm()) {
+            vm.setDistanceFilter(km)
+        } else {
+            pendingDistanceKm = km
+            locationPermLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                )
+            )
+        }
+    }
+
+    // ── UI ──────────────────────────────────────────────────────────────────
     AppTheme {
         Box(
             modifier = Modifier
@@ -113,11 +173,9 @@ fun MainScreen(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             if (isLoggedIn) {
-                                // Inbox icon
                                 IconButton(onClick = { navController.navigate("inbox") }) {
                                     Icon(Icons.Filled.Email, contentDescription = "Inbox", tint = SmTextDim)
                                 }
-                                // Avatar with first letter
                                 val letter = UserSession.email?.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
                                 Surface(
                                     onClick = { navController.navigate("my-secrets") },
@@ -169,6 +227,35 @@ fun MainScreen(
                             color = SmTextFaint,
                             fontFamily = GeistFamily,
                         )
+                    }
+                }
+
+                // Distance filter chips (always visible)
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            DISTANCE_OPTIONS.forEach { (km, label) ->
+                                FilterChip(
+                                    label = label,
+                                    selected = state.distanceKm == km,
+                                    onClick = { onDistanceChipClick(km) },
+                                )
+                            }
+                        }
+                        if (locationDenied) {
+                            Text(
+                                "Location permission needed for distance filtering.",
+                                fontSize = 11.sp,
+                                color = Color(0xFFFF7070),
+                                fontFamily = GeistFamily,
+                            )
+                        }
                     }
                 }
 
@@ -283,6 +370,51 @@ fun MainScreen(
                         },
                     )
                 }
+            }
+
+            // ── Disclaimer dialog ───────────────────────────────────────────
+            if (showDisclaimer) {
+                AlertDialog(
+                    onDismissRequest = {},
+                    containerColor = Color(0xFF1C0A10),
+                    tonalElevation = 0.dp,
+                    title = {
+                        Text(
+                            "🤫 Velkommen til 24h Secret",
+                            color = SmText,
+                            fontFamily = InstrumentSerif,
+                            fontSize = 20.sp,
+                        )
+                    },
+                    text = {
+                        Text(
+                            buildString {
+                                appendLine("Før du begynner, noen viktige punkter:\n")
+                                appendLine("• Alt du deler er anonymt – vi lagrer ikke hvem du er.")
+                                appendLine("• Hemmeligheter slettes automatisk etter 24 timer.")
+                                appendLine("• Del aldri sensitiv informasjon som kan skade deg selv eller andre.")
+                                appendLine("• Appen er beregnet for brukere over 16 år.")
+                                append("• Vi forbeholder oss retten til å fjerne innhold som er ulovlig eller skadelig.")
+                            },
+                            color = SmTextDim,
+                            fontFamily = GeistFamily,
+                            fontSize = 13.sp,
+                            lineHeight = 20.sp,
+                        )
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+                                    .edit().putBoolean("disclaimer_shown", true).apply()
+                                showDisclaimer = false
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = SmAccent),
+                        ) {
+                            Text("Jeg forstår", fontFamily = GeistFamily, fontWeight = FontWeight.Medium)
+                        }
+                    },
+                )
             }
         }
     }

@@ -1,6 +1,7 @@
 package no.secret24h.data
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,11 +12,14 @@ data class UiState(
     val sort: Sort = Sort.Recent,
     val moodFilter: String? = null,
     val reactionSort: String? = null,
+    val distanceKm: Double? = null,   // null = everywhere
+    val lastLocation: LatLng? = null,
     val isLoading: Boolean = false,
     val error: String? = null,
 )
 
-class SecretsViewModel : ViewModel() {
+class SecretsViewModel(app: Application) : AndroidViewModel(app) {
+    private val ctx get() = getApplication<Application>()
     private val _state = MutableStateFlow(UiState())
     val state = _state.asStateFlow()
 
@@ -36,15 +40,30 @@ class SecretsViewModel : ViewModel() {
         load()
     }
 
+    fun setDistanceFilter(km: Double?) {
+        if (km == null) {
+            _state.value = _state.value.copy(distanceKm = null, lastLocation = null)
+            load()
+        } else {
+            viewModelScope.launch {
+                val loc = LocationHelper.getLocation(ctx)
+                _state.value = _state.value.copy(distanceKm = km, lastLocation = loc)
+                load()
+            }
+        }
+    }
+
     fun load() {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true, error = null)
             try {
                 val s = _state.value
                 val secrets = Api.getSecrets(
-                    sort = s.sort,
-                    moodFilter = if (s.sort == Sort.Top) s.moodFilter else null,
+                    sort         = s.sort,
+                    moodFilter   = if (s.sort == Sort.Top) s.moodFilter else null,
                     reactionSort = if (s.sort == Sort.Top) s.reactionSort else null,
+                    distanceKm   = s.distanceKm,
+                    location     = s.lastLocation,
                 )
                 _state.value = _state.value.copy(secrets = secrets, isLoading = false)
             } catch (e: Exception) {
@@ -56,7 +75,8 @@ class SecretsViewModel : ViewModel() {
     fun postSecret(text: String, mood: String, onDone: () -> Unit) {
         viewModelScope.launch {
             try {
-                val secret = Api.postSecret(text, mood)
+                val location = LocationHelper.getLocation(ctx) // attach location if permission granted
+                val secret = Api.postSecret(text, mood, location)
                 if (_state.value.sort == Sort.Recent) {
                     _state.value = _state.value.copy(
                         secrets = listOf(secret) + _state.value.secrets

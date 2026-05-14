@@ -38,6 +38,8 @@ object Api {
         sort: Sort,
         moodFilter: String? = null,
         reactionSort: String? = null,
+        distanceKm: Double? = null,
+        location: LatLng? = null,
     ): List<Secret> = withContext(Dispatchers.IO) {
         val order = when {
             sort == Sort.Recent -> "created_at.desc"
@@ -46,6 +48,24 @@ object Api {
             reactionSort == "doubtful" -> "reaction_doubtful.desc"
             else -> "reaction_me_too.desc"
         }
+
+        // Use RPC when distance filter is active and we have a location
+        if (distanceKm != null && location != null) {
+            val body = JSONObject()
+                .put("user_lat", location.lat)
+                .put("user_lng", location.lng)
+                .put("radius_km", distanceKm)
+            if (moodFilter != null) body.put("mood_filter", moodFilter)
+            val req = baseRequest("/rest/v1/rpc/secrets_near?order=$order&limit=50")
+                .post(body.toString().toRequestBody(json))
+                .build()
+            return@withContext client.newCall(req).execute().use { res ->
+                if (!res.isSuccessful) throw Exception("Error: ${res.code}")
+                val arr = JSONArray(res.body!!.string())
+                List(arr.length()) { arr.getJSONObject(it).toSecret() }
+            }
+        }
+
         val now = Instant.now().toString()
         var url = "/rest/v1/secrets?select=id,text,mood,expires_at,reaction_me_too,reaction_wild,reaction_doubtful,user_id" +
                 "&expires_at=gt.$now&order=$order&limit=50"
@@ -60,9 +80,10 @@ object Api {
         }
     }
 
-    suspend fun postSecret(text: String, mood: String): Secret = withContext(Dispatchers.IO) {
+    suspend fun postSecret(text: String, mood: String, location: LatLng? = null): Secret = withContext(Dispatchers.IO) {
         val obj = JSONObject().put("text", text).put("mood", mood)
         UserSession.userId?.let { obj.put("user_id", it) }
+        location?.let { obj.put("lat", it.lat).put("lng", it.lng) }
         val body = obj.toString().toRequestBody(json)
         val req = baseRequest("/rest/v1/secrets")
             .header("Prefer", "return=representation")
