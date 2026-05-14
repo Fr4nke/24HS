@@ -26,7 +26,7 @@ object Api {
     private fun JSONObject.toSecret() = Secret(
         id               = getString("id"),
         text             = getString("text"),
-        mood             = optString("mood", "annet"),
+        mood             = optString("mood", "other"),
         expiresAt        = getString("expires_at"),
         reactionMeToo    = optInt("reaction_me_too", 0),
         reactionWild     = optInt("reaction_wild", 0),

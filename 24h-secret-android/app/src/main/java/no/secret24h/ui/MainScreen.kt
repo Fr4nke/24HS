@@ -380,7 +380,7 @@ fun MainScreen(
                     tonalElevation = 0.dp,
                     title = {
                         Text(
-                            "🤫 Velkommen til 24h Secret",
+                            "🤫 Welcome to 24h Secret",
                             color = SmText,
                             fontFamily = InstrumentSerif,
                             fontSize = 20.sp,
@@ -389,12 +389,13 @@ fun MainScreen(
                     text = {
                         Text(
                             buildString {
-                                appendLine("Før du begynner, noen viktige punkter:\n")
-                                appendLine("• Alt du deler er anonymt – vi lagrer ikke hvem du er.")
-                                appendLine("• Hemmeligheter slettes automatisk etter 24 timer.")
-                                appendLine("• Del aldri sensitiv informasjon som kan skade deg selv eller andre.")
-                                appendLine("• Appen er beregnet for brukere over 16 år.")
-                                append("• Vi forbeholder oss retten til å fjerne innhold som er ulovlig eller skadelig.")
+                                appendLine("Before you begin, a few important things:\n")
+                                appendLine("• Everything you share is anonymous — we don't store who you are.")
+                                appendLine("• Secrets are automatically deleted after 24 hours.")
+                                appendLine("• All content must be written in English.")
+                                appendLine("• Never share sensitive information that could harm you or others.")
+                                appendLine("• This app is intended for users aged 16 and above.")
+                                append("• We reserve the right to remove content that is illegal or harmful.")
                             },
                             color = SmTextDim,
                             fontFamily = GeistFamily,
@@ -411,7 +412,7 @@ fun MainScreen(
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = SmAccent),
                         ) {
-                            Text("Jeg forstår", fontFamily = GeistFamily, fontWeight = FontWeight.Medium)
+                            Text("I understand", fontFamily = GeistFamily, fontWeight = FontWeight.Medium)
                         }
                     },
                 )

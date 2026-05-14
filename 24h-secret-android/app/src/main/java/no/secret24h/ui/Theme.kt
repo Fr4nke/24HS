@@ -45,15 +45,15 @@ val DuskCardBg    = SmSurface
 data class EmotionColors(val bg: Color, val fg: Color, val glow: Color)
 
 val EMOTION_COLORS = mapOf(
-    "lettelse" to EmotionColors(Color(0xFF0D1A3A), Color(0xFF7B77FF), Color(0xFF5A55EE)),
-    "skam"     to EmotionColors(Color(0xFF3A1008), Color(0xFFFF7A5A), Color(0xFFEE5533)),
-    "stolthet" to EmotionColors(Color(0xFF3A2800), Color(0xFFFFAD45), Color(0xFFEE9400)),
-    "anger"    to EmotionColors(Color(0xFF0A1E30), Color(0xFF4AADFF), Color(0xFF2288EE)),
-    "lengsel"  to EmotionColors(Color(0xFF1E0A3A), Color(0xFFAB7BFF), Color(0xFF8855EE)),
-    "sinne"    to EmotionColors(Color(0xFF3A0808), Color(0xFFFF5F5F), Color(0xFFEE3333)),
-    "frykt"    to EmotionColors(Color(0xFF003A30), Color(0xFF42F0D4), Color(0xFF00CCAA)),
-    "glede"    to EmotionColors(Color(0xFF3A0030), Color(0xFFFF6ADB), Color(0xFFEE3DC0)),
-    "annet"    to EmotionColors(Color(0xFF1A1210), Color(0xFF9E8880), Color(0xFF6E5850)),
+    "relief"  to EmotionColors(Color(0xFF0D1A3A), Color(0xFF7B77FF), Color(0xFF5A55EE)),
+    "shame"   to EmotionColors(Color(0xFF3A1008), Color(0xFFFF7A5A), Color(0xFFEE5533)),
+    "pride"   to EmotionColors(Color(0xFF3A2800), Color(0xFFFFAD45), Color(0xFFEE9400)),
+    "regret"  to EmotionColors(Color(0xFF0A1E30), Color(0xFF4AADFF), Color(0xFF2288EE)),
+    "longing" to EmotionColors(Color(0xFF1E0A3A), Color(0xFFAB7BFF), Color(0xFF8855EE)),
+    "anger"   to EmotionColors(Color(0xFF3A0808), Color(0xFFFF5F5F), Color(0xFFEE3333)),
+    "fear"    to EmotionColors(Color(0xFF003A30), Color(0xFF42F0D4), Color(0xFF00CCAA)),
+    "joy"     to EmotionColors(Color(0xFF3A0030), Color(0xFFFF6ADB), Color(0xFFEE3DC0)),
+    "other"   to EmotionColors(Color(0xFF1A1210), Color(0xFF9E8880), Color(0xFF6E5850)),
 )
 
 // ── Fonts ─────────────────────────────────────────────────────────────────────

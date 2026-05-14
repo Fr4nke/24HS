@@ -64,7 +64,7 @@ fun SecretCard(
     onWhisper: ((secretId: String, receiverId: String) -> Unit)? = null,
 ) {
     val rankColors = mapOf(1 to Color(0xFFFFAD45), 2 to Color(0xFFB0A8A0), 3 to Color(0xFFCD8847))
-    val emotion = EMOTION_COLORS[secret.mood] ?: EMOTION_COLORS["annet"]!!
+    val emotion = EMOTION_COLORS[secret.mood] ?: EMOTION_COLORS["other"]!!
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -148,9 +148,9 @@ fun SecretCard(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        ReactionButton("🙋", "me too",   secret.reactionMeToo,    reactedMeToo,    SmAccent)                { onReact("me_too") }
-                        ReactionButton("🤯", "wild",     secret.reactionWild,     reactedWild,     Color(0xFFFF6ADB)) { onReact("wild") }
-                        ReactionButton("🤨", "doubtful", secret.reactionDoubtful, reactedDoubtful, Color(0xFF42F0D4)) { onReact("doubtful") }
+                        LabeledReactionButton("🙋", "Me too",   secret.reactionMeToo,    reactedMeToo,    SmAccent)           { onReact("me_too") }
+                        LabeledReactionButton("🤯", "Wild",     secret.reactionWild,     reactedWild,     Color(0xFFFF6ADB)) { onReact("wild") }
+                        LabeledReactionButton("🤨", "Doubtful", secret.reactionDoubtful, reactedDoubtful, Color(0xFF42F0D4)) { onReact("doubtful") }
                     }
 
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -211,6 +211,25 @@ fun SecretCard(
                 Text("#$rank", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF120608))
             }
         }
+    }
+}
+
+@Composable
+fun LabeledReactionButton(
+    emoji: String,
+    label: String,
+    count: Int,
+    active: Boolean,
+    activeColor: Color,
+    onClick: () -> Unit,
+) {
+    val fg = if (active) activeColor else SmTextDim
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(3.dp),
+    ) {
+        ReactionButton(emoji, label, count, active, activeColor, onClick)
+        Text(label, fontSize = 9.sp, color = fg.copy(alpha = if (active) 0.85f else 0.5f), fontFamily = GeistFamily)
     }
 }
 

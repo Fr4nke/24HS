@@ -13,16 +13,16 @@ data class Secret(
 
 enum class Sort { Recent, Top }
 
-val MOODS = listOf("lettelse", "skam", "stolthet", "anger", "lengsel", "sinne", "frykt", "glede", "annet")
+val MOODS = listOf("relief", "shame", "pride", "regret", "longing", "anger", "fear", "joy", "other")
 
 val MOOD_EMOJIS = mapOf(
-    "lettelse" to "😮‍💨",
-    "skam"     to "😳",
-    "stolthet" to "💪",
-    "anger"    to "😔",
-    "lengsel"  to "🌙",
-    "sinne"    to "😤",
-    "frykt"    to "😨",
-    "glede"    to "✨",
-    "annet"    to "💭",
+    "relief"  to "😮‍💨",
+    "shame"   to "😳",
+    "pride"   to "💪",
+    "regret"  to "😔",
+    "longing" to "🌙",
+    "anger"   to "😤",
+    "fear"    to "😨",
+    "joy"     to "✨",
+    "other"   to "💭",
 )

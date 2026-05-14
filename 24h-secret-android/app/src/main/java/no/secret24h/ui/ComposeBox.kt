@@ -24,7 +24,7 @@ fun ComposeBox(
     onSubmit: (text: String, mood: String) -> Unit,
 ) {
     var text by remember { mutableStateOf("") }
-    var mood by remember { mutableStateOf("lettelse") }
+    var mood by remember { mutableStateOf("relief") }
     val charCount = text.length
     val canSubmit = text.trim().length >= 5 && !isSending
 
@@ -71,7 +71,7 @@ fun ComposeBox(
         ) {
             MOODS.forEach { m ->
                 val selected = m == mood
-                val ec = EMOTION_COLORS[m] ?: EMOTION_COLORS["annet"]!!
+                val ec = EMOTION_COLORS[m] ?: EMOTION_COLORS["other"]!!
                 Surface(
                     onClick = { mood = m },
                     shape = RoundedCornerShape(100.dp),
