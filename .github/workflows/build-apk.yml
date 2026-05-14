@@ -26,7 +26,7 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Write Supabase config
+      - name: Write config
         run: |
           cat > 24h-secret-android/app/src/main/java/no/secret24h/data/Config.kt << 'EOF'
           package no.secret24h.data
@@ -34,6 +34,7 @@ jobs:
           object Config {
               const val SUPABASE_URL = "${{ secrets.SUPABASE_URL }}"
               const val SUPABASE_ANON_KEY = "${{ secrets.SUPABASE_ANON_KEY }}"
+              const val GOOGLE_WEB_CLIENT_ID = "${{ secrets.GOOGLE_WEB_CLIENT_ID }}"
           }
           EOF
 
