@@ -58,9 +58,7 @@ fun AuthScreen(
                 scope.launch {
                     try {
                         val userInfo = AuthApi.signInWithGoogle(idToken)
-                        UserSession.accessToken = userInfo.accessToken
-                        UserSession.userId = userInfo.userId
-                        UserSession.email = userInfo.email
+                        UserSession.save(userInfo.accessToken, userInfo.userId, userInfo.email)
                         isLoading = false
                         onSuccess()
                     } catch (e: Exception) {

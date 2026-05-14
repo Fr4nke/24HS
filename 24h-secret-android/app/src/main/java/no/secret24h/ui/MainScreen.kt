@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
@@ -210,92 +211,73 @@ fun MainScreen(
                     }
                 }
 
-                // Sort toggle
+                // Combined sort + filter row
                 item {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            SortTab("Latest", state.sort == Sort.Recent) { vm.setSort(Sort.Recent) }
-                            SortTab("Top 24h +", state.sort == Sort.Top) { vm.setSort(Sort.Top) }
+                        SortTab("Latest", state.sort == Sort.Recent) { vm.setSort(Sort.Recent) }
+                        SortTab("Top 24h +", state.sort == Sort.Top) { vm.setSort(Sort.Top) }
+
+                        // Distance dropdown
+                        val distanceLabel = DISTANCE_OPTIONS.firstOrNull { it.first == state.distanceKm }?.second
+                            ?: "🌍 Everywhere"
+                        FilterDropdown(
+                            label = distanceLabel,
+                            selected = state.distanceKm != null,
+                            options = DISTANCE_OPTIONS.map { (km, lbl) -> lbl to km },
+                            onSelected = { km -> onDistanceChipClick(km) },
+                        )
+
+                        if (state.sort == Sort.Top) {
+                            // Mood dropdown
+                            val moodLabel = state.moodFilter?.let { "${MOODS.firstOrNull { m -> m == it } ?: it}" } ?: "All moods"
+                            FilterDropdown(
+                                label = moodLabel,
+                                selected = state.moodFilter != null,
+                                options = listOf<Pair<String, String?>>("All moods" to null) + MOODS.map { it to it },
+                                onSelected = { mood -> vm.setMoodFilter(mood) },
+                            )
+                            // Reaction dropdown
+                            val reactionLabel = when (state.reactionSort) {
+                                "me_too" -> "🙋 Me too"
+                                "wild" -> "🤯 Wild"
+                                "doubtful" -> "🤨 Doubtful"
+                                else -> "All reactions"
+                            }
+                            FilterDropdown(
+                                label = reactionLabel,
+                                selected = state.reactionSort != null,
+                                options = listOf<Pair<String, String?>>(
+                                    "All reactions" to null,
+                                    "🙋 Me too" to "me_too",
+                                    "🤯 Wild" to "wild",
+                                    "🤨 Doubtful" to "doubtful",
+                                ),
+                                onSelected = { vm.setReactionSort(it) },
+                            )
                         }
+
                         Text(
-                            "${state.secrets.size} secrets",
+                            "${state.secrets.size}",
                             fontSize = 11.sp,
                             color = SmTextFaint,
                             fontFamily = GeistFamily,
+                            modifier = Modifier.padding(start = 4.dp),
                         )
                     }
-                }
-
-                // Distance filter chips (always visible)
-                item {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            DISTANCE_OPTIONS.forEach { (km, label) ->
-                                FilterChip(
-                                    label = label,
-                                    selected = state.distanceKm == km,
-                                    onClick = { onDistanceChipClick(km) },
-                                )
-                            }
-                        }
-                        if (locationDenied) {
-                            Text(
-                                "Location permission needed for distance filtering.",
-                                fontSize = 11.sp,
-                                color = Color(0xFFFF7070),
-                                fontFamily = GeistFamily,
-                            )
-                        }
-                    }
-                }
-
-                // Top filters (only in Top mode)
-                if (state.sort == Sort.Top) {
-                    // Mood filter chips
-                    item {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            FilterChip(
-                                label = "All",
-                                selected = state.moodFilter == null,
-                                onClick = { vm.setMoodFilter(null) },
-                            )
-                            MOODS.forEach { mood ->
-                                FilterChip(
-                                    label = mood,
-                                    selected = state.moodFilter == mood,
-                                    onClick = { vm.setMoodFilter(if (state.moodFilter == mood) null else mood) },
-                                )
-                            }
-                        }
-                    }
-
-                    // Reaction sort row
-                    item {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            ReactionSortButton("All", state.reactionSort == null) { vm.setReactionSort(null) }
-                            ReactionSortButton("Me Too", state.reactionSort == "me_too") { vm.setReactionSort("me_too") }
-                            ReactionSortButton("Wild", state.reactionSort == "wild") { vm.setReactionSort("wild") }
-                            ReactionSortButton("Doubtful", state.reactionSort == "doubtful") { vm.setReactionSort("doubtful") }
-                        }
+                    if (locationDenied) {
+                        Text(
+                            "Location permission needed for distance filtering.",
+                            fontSize = 11.sp,
+                            color = Color(0xFFFF7070),
+                            fontFamily = GeistFamily,
+                            modifier = Modifier.padding(top = 4.dp),
+                        )
                     }
                 }
 
@@ -473,6 +455,68 @@ fun FilterChip(label: String, selected: Boolean, onClick: () -> Unit) {
             color = if (selected) SmAccent else SmTextDim,
             fontFamily = GeistFamily,
         )
+    }
+}
+
+@Composable
+fun <T> FilterDropdown(
+    label: String,
+    selected: Boolean,
+    options: List<Pair<String, T>>,
+    onSelected: (T) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        Surface(
+            onClick = { expanded = true },
+            shape = RoundedCornerShape(100.dp),
+            color = Color.Transparent,
+            modifier = Modifier
+                .border(
+                    1.dp,
+                    if (selected) SmAccent.copy(alpha = 0.6f) else SmBorder,
+                    RoundedCornerShape(100.dp),
+                )
+                .background(
+                    if (selected) SmAccent.copy(alpha = 0.15f) else Color.Transparent,
+                    RoundedCornerShape(100.dp),
+                ),
+        ) {
+            Row(
+                modifier = Modifier.padding(start = 9.dp, end = 4.dp, top = 5.dp, bottom = 5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    label,
+                    fontSize = 10.sp,
+                    color = if (selected) SmAccent else SmTextDim,
+                    fontFamily = GeistFamily,
+                )
+                Icon(
+                    Icons.Filled.ArrowDropDown,
+                    contentDescription = null,
+                    tint = if (selected) SmAccent else SmTextDim,
+                    modifier = Modifier.size(14.dp),
+                )
+            }
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            containerColor = Color(0xFF1C0A10),
+        ) {
+            options.forEach { (text, value) ->
+                DropdownMenuItem(
+                    text = {
+                        Text(text, fontSize = 13.sp, color = SmText, fontFamily = GeistFamily)
+                    },
+                    onClick = {
+                        onSelected(value)
+                        expanded = false
+                    },
+                )
+            }
+        }
     }
 }
 

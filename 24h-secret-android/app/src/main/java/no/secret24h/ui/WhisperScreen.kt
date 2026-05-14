@@ -36,6 +36,7 @@ fun WhisperScreen(
     var isLoading by remember { mutableStateOf(true) }
     var inputText by remember { mutableStateOf("") }
     var isSending by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
@@ -43,12 +44,14 @@ fun WhisperScreen(
         scope.launch {
             try {
                 messages = WhisperApi.getMessages(secretId, otherUserId)
-                // Mark messages from other user as read
-                WhisperApi.markRead(secretId, otherUserId)
+                // Mark messages from other user as read (fire and forget)
+                try { WhisperApi.markRead(secretId, otherUserId) } catch (_: Exception) {}
                 if (messages.isNotEmpty()) {
-                    listState.animateScrollToItem(messages.size - 1)
+                    try { listState.animateScrollToItem(messages.size - 1) } catch (_: Exception) {}
                 }
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                error = e.message ?: "Could not load messages"
+            }
             isLoading = false
         }
     }
@@ -85,6 +88,16 @@ fun WhisperScreen(
                         color = SmText,
                         fontFamily = GeistFamily,
                         modifier = Modifier.padding(start = 4.dp),
+                    )
+                }
+
+                error?.let {
+                    Text(
+                        it,
+                        color = Color(0xFFFF5F5F),
+                        fontSize = 13.sp,
+                        fontFamily = GeistFamily,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                     )
                 }
 

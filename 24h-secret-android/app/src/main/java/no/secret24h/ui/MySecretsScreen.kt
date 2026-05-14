@@ -130,7 +130,7 @@ fun MySecretCard(secret: Secret, onRepublish: () -> Unit) {
         OffsetDateTime.parse(secret.expiresAt).toInstant().isBefore(Instant.now())
     } catch (_: Exception) { false }
 
-    val emotion = EMOTION_COLORS[secret.mood] ?: EMOTION_COLORS["annet"]!!
+    val emotion = EMOTION_COLORS[secret.mood] ?: EMOTION_COLORS["other"]!!
 
     Box(
         modifier = Modifier
