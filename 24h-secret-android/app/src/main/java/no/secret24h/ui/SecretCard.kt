@@ -148,9 +148,9 @@ fun SecretCard(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        FlatReactionButton("🙋", secret.reactionMeToo, reactedMeToo, SmAccent)           { onReact("me_too") }
-                        FlatReactionButton("🤯", secret.reactionWild,  reactedWild,  Color(0xFFFF6ADB)) { onReact("wild") }
-                        FlatReactionButton("🤨", secret.reactionDoubtful, reactedDoubtful, Color(0xFF42F0D4)) { onReact("doubtful") }
+                        FlatReactionButton("🙋", secret.reactionMeToo, reactedMeToo, SmAccent, "Me too")     { onReact("me_too") }
+                        FlatReactionButton("🤯", secret.reactionWild,  reactedWild,  Color(0xFFFF6ADB), "Wild") { onReact("wild") }
+                        FlatReactionButton("🤨", secret.reactionDoubtful, reactedDoubtful, Color(0xFF42F0D4), "Doubtful") { onReact("doubtful") }
                     }
 
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -195,6 +195,7 @@ fun FlatReactionButton(
     count: Int,
     active: Boolean,
     activeColor: Color,
+    label: String,
     onClick: () -> Unit,
 ) {
     val fg = if (active) activeColor else SmTextDim
@@ -203,12 +204,20 @@ fun FlatReactionButton(
         enabled = !active,
         contentPadding = PaddingValues(0.dp),
     ) {
-        Text(
-            "$emoji $count",
-            fontSize = 12.sp,
-            fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
-            color = fg,
-            fontFamily = GeistFamily,
-        )
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                "$emoji $count",
+                fontSize = 12.sp,
+                fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
+                color = fg,
+                fontFamily = GeistFamily,
+            )
+            Text(
+                label,
+                fontSize = 9.sp,
+                color = if (active) fg else SmTextFaint,
+                fontFamily = GeistFamily,
+            )
+        }
     }
 }

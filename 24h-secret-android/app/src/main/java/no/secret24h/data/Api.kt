@@ -46,7 +46,7 @@ object Api {
             reactionSort == "me_too" -> "reaction_me_too.desc"
             reactionSort == "wild" -> "reaction_wild.desc"
             reactionSort == "doubtful" -> "reaction_doubtful.desc"
-            else -> "reaction_me_too.desc"
+            else -> "total_reactions.desc"
         }
 
         // Use RPC when distance filter is active and we have a location
@@ -67,7 +67,7 @@ object Api {
         }
 
         val now = Instant.now().toString()
-        var url = "/rest/v1/secrets?select=id,text,mood,expires_at,reaction_me_too,reaction_wild,reaction_doubtful,user_id" +
+        var url = "/rest/v1/secrets?select=id,text,mood,expires_at,reaction_me_too,reaction_wild,reaction_doubtful,total_reactions,user_id" +
                 "&expires_at=gt.$now&order=$order&limit=50"
         if (moodFilter != null) url += "&mood=eq.$moodFilter"
 

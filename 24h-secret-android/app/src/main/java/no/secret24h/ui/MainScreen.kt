@@ -468,8 +468,8 @@ fun FilterChip(label: String, selected: Boolean, onClick: () -> Unit) {
     ) {
         Text(
             label,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            fontSize = 12.sp,
+            modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
+            fontSize = 10.sp,
             color = if (selected) SmAccent else SmTextDim,
             fontFamily = GeistFamily,
         )
@@ -495,8 +495,8 @@ fun ReactionSortButton(label: String, selected: Boolean, onClick: () -> Unit) {
     ) {
         Text(
             label,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            fontSize = 12.sp,
+            modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
+            fontSize = 10.sp,
             color = if (selected) SmAccent else SmTextFaint,
             fontFamily = GeistFamily,
         )
