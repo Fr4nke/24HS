@@ -91,7 +91,10 @@ object Api {
             .build()
 
         client.newCall(req).execute().use { res ->
-            if (!res.isSuccessful) throw Exception("Could not save: ${res.code}")
+            if (!res.isSuccessful) {
+                val errBody = res.body?.string()?.take(300) ?: ""
+                throw Exception("Could not save (${res.code}): $errBody")
+            }
             JSONArray(res.body!!.string()).getJSONObject(0).toSecret()
         }
     }
