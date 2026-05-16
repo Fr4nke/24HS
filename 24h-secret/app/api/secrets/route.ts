@@ -1,4 +1,4 @@
-import { getSupabase } from '@/lib/supabase'
+import { getSupabase, getSupabaseForUser } from '@/lib/supabase'
 import { getUserFromRequest } from '@/lib/auth-server'
 import { rateLimit, getClientIP } from '@/lib/rate-limit'
 import { filterProfanity, containsURL } from '@/lib/content-filter'
@@ -23,9 +23,10 @@ export async function POST(req: Request) {
   }
 
   const filtered = filterProfanity(text.trim())
-  const user = await getUserFromRequest(req)
+  const token = req.headers.get('Authorization')?.slice(7)
+  const user = token ? await getUserFromRequest(req) : null
+  const supabase = token ? getSupabaseForUser(token) : getSupabase()
 
-  const supabase = getSupabase()
   const { data, error } = await supabase
     .from('secrets')
     .insert({ text: filtered, mood: mood ?? 'other', user_id: user?.id ?? null })
