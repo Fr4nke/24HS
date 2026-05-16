@@ -2,13 +2,18 @@
 
 import { useState } from 'react'
 import type { Mood, Secret } from '@/lib/supabase'
+import { getSupabaseBrowser } from '@/lib/supabase-browser'
 
 const MOODS: { value: Mood; label: string; emoji: string }[] = [
-  { value: 'lettelse', label: 'Lettelse', emoji: '😮‍💨' },
-  { value: 'skam', label: 'Skam', emoji: '😳' },
-  { value: 'stolthet', label: 'Stolthet', emoji: '💪' },
-  { value: 'anger', label: 'Anger', emoji: '😤' },
-  { value: 'annet', label: 'Annet', emoji: '💭' },
+  { value: 'relief',  label: 'Relief',  emoji: '😮' },
+  { value: 'shame',   label: 'Shame',   emoji: '😔' },
+  { value: 'pride',   label: 'Pride',   emoji: '😤' },
+  { value: 'regret',  label: 'Regret',  emoji: '😞' },
+  { value: 'longing', label: 'Longing', emoji: '💭' },
+  { value: 'anger',   label: 'Anger',   emoji: '😡' },
+  { value: 'fear',    label: 'Fear',    emoji: '😨' },
+  { value: 'joy',     label: 'Joy',     emoji: '😄' },
+  { value: 'other',   label: 'Other',   emoji: '🤔' },
 ]
 
 interface Props {
@@ -17,7 +22,7 @@ interface Props {
 
 export default function ComposeBox({ onPublished }: Props) {
   const [text, setText] = useState('')
-  const [mood, setMood] = useState<Mood>('annet')
+  const [mood, setMood] = useState<Mood>('other')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -28,10 +33,11 @@ export default function ComposeBox({ onPublished }: Props) {
     setError('')
 
     try {
+      const { data: { user } } = await getSupabaseBrowser().auth.getUser()
       const res = await fetch('/api/secrets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: text.trim(), mood }),
+        body: JSON.stringify({ text: text.trim(), mood, user_id: user?.id ?? null }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error)
@@ -55,7 +61,7 @@ export default function ComposeBox({ onPublished }: Props) {
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Del en hemmelighet anonymt... 🤫"
+        placeholder="Share a secret anonymously... 🤫"
         maxLength={280}
         rows={3}
         className="w-full bg-transparent text-zinc-100 placeholder-zinc-600 resize-none outline-none text-base leading-relaxed"
@@ -92,13 +98,13 @@ export default function ComposeBox({ onPublished }: Props) {
             disabled={loading || text.trim().length < 5}
             className="px-5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
           >
-            {loading ? 'Sender...' : 'Del hemmelighet'}
+            {loading ? 'Posting...' : 'Share secret'}
           </button>
         </div>
       </div>
 
       {tooShort && (
-        <p className="text-xs text-zinc-500">Minst 5 tegn kreves</p>
+        <p className="text-xs text-zinc-500">At least 5 characters required</p>
       )}
       {error && <p className="text-xs text-red-400">{error}</p>}
     </form>

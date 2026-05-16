@@ -4,6 +4,11 @@ services:
     ports:
       - "3000:3000"
     command: npx next dev -H 0.0.0.0
+    environment:
+      - WATCHPACK_POLLING=true
+    volumes:
+      - ./24h-secret:/app
+      - /app/node_modules
     env_file:
       - path: ./24h-secret/.env.local
         required: false
@@ -13,6 +18,9 @@ services:
     ports:
       - "3001:3001"
     command: npx next dev -p 3001 -H 0.0.0.0
+    volumes:
+      - ./24h-secret-admin:/app
+      - /app/node_modules
     env_file:
       - path: ./24h-secret-admin/.env.local
         required: false

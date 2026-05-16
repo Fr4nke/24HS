@@ -9,7 +9,7 @@ async function getInitialSecrets(): Promise<Secret[]> {
     const supabase = getSupabase()
     const { data } = await supabase
       .from('secrets')
-      .select('id, text, mood, expires_at, reaction_me_too, reaction_heart')
+      .select('id, text, mood, expires_at, reaction_me_too, reaction_wild, reaction_doubtful, user_id')
       .gt('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false })
       .limit(50)

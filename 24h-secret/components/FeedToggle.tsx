@@ -16,7 +16,7 @@ export default function FeedToggle({ sort, onChange }: Props) {
             : 'text-zinc-500 hover:text-zinc-300'
         }`}
       >
-        Siste
+        Latest
       </button>
       <button
         onClick={() => onChange('top')}
@@ -26,7 +26,7 @@ export default function FeedToggle({ sort, onChange }: Props) {
             : 'text-zinc-500 hover:text-zinc-300'
         }`}
       >
-        Topp 24t ✦
+        Top 24h ✦
       </button>
     </div>
   )

@@ -9,7 +9,7 @@ const ago = (days: number) => new Date(now.getTime() - days * 86400000).toISOStr
 
 async function fetchStats(db: ReturnType<typeof getAdminClient>) {
   const [
-    { count: secretsTotal },
+    { count: secretsTotal, error: dbError },
     { count: secretsMonth },
     { count: secretsWeek },
     { count: secretsDay },
@@ -29,6 +29,8 @@ async function fetchStats(db: ReturnType<typeof getAdminClient>) {
     db.from('whispers').select('*', { count: 'exact', head: true }).gte('created_at', ago(1)),
     db.from('secrets').select('total_reactions'),
   ])
+
+  if (dbError) throw new Error(`Supabase feil (${dbError.code}): ${dbError.message || dbError.hint || JSON.stringify(dbError)}`)
 
   const totalReactions = (reactionData ?? []).reduce((s: number, r: { total_reactions: number }) => s + (r.total_reactions ?? 0), 0)
 
@@ -60,7 +62,7 @@ export default async function AdminPage({
   const { tab = 'stats' } = await searchParams as { tab?: Tab }
   const db = getAdminClient()
 
-  const [stats, secretsResult, whispersResult] = await Promise.all([
+  const [stats, secretsResult, whispersResult, usersListResult] = await Promise.all([
     tab === 'stats' ? fetchStats(db) : null,
     tab === 'secrets'
       ? db.from('secrets')
@@ -74,10 +76,17 @@ export default async function AdminPage({
           .order('created_at', { ascending: false })
           .limit(200)
       : { data: [] },
+    tab === 'secrets' || tab === 'whispers'
+      ? db.auth.admin.listUsers({ perPage: 1000 })
+      : { data: { users: [] } },
   ])
 
   const secrets = (secretsResult as { data: unknown[] }).data ?? []
   const whispers = (whispersResult as { data: unknown[] }).data ?? []
+  const userEmailMap = new Map<string, string>(
+    ((usersListResult as { data: { users: { id: string; email?: string }[] } }).data?.users ?? [])
+      .map(u => [u.id, u.email ?? ''])
+  )
   const nowIso = now.toISOString()
 
   return (
@@ -172,7 +181,7 @@ export default async function AdminPage({
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
                   <tr>
-                    {['ID', 'Text', 'Mood', 'Posted', 'Expires', 'User', '🙋🤯🤨', ''].map(h => (
+                    {['ID', 'Text', 'Mood', 'Posted', 'Expires', 'User', 'Email', '🙋🤯🤨', ''].map(h => (
                       <th key={h} style={{ textAlign: 'left', padding: '8px 12px', color: '#9a7070', fontWeight: 500, borderBottom: '1px solid rgba(255,232,220,0.08)', whiteSpace: 'nowrap', fontSize: 11 }}>{h}</th>
                     ))}
                   </tr>
@@ -188,6 +197,7 @@ export default async function AdminPage({
                         <td style={{ padding: '7px 12px', color: '#9a7070', whiteSpace: 'nowrap', fontSize: 11 }}>{new Date(s.created_at as string).toLocaleDateString('no')}</td>
                         <td style={{ padding: '7px 12px', color: expired ? '#ff5f5f' : '#9a7070', whiteSpace: 'nowrap', fontSize: 11 }}>{expired ? 'Expired' : new Date(s.expires_at as string).toLocaleDateString('no')}</td>
                         <td style={{ padding: '7px 12px', color: '#9a7070', fontFamily: 'monospace', fontSize: 11 }}>{s.user_id ? (s.user_id as string).slice(0, 8) : '—'}</td>
+                        <td style={{ padding: '7px 12px', color: '#9a7070', fontSize: 11 }}>{s.user_id ? (userEmailMap.get(s.user_id as string) ?? '—') : '—'}</td>
                         <td style={{ padding: '7px 12px', color: '#9a7070', whiteSpace: 'nowrap' }}>{s.reaction_me_too as number} · {s.reaction_wild as number} · {s.reaction_doubtful as number}</td>
                         <td style={{ padding: '7px 12px' }}>
                           <DeleteButton id={s.id as string} action={deleteSecret} />
