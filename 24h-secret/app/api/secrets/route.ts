@@ -1,6 +1,7 @@
 import { getSupabase } from '@/lib/supabase'
 import { getUserFromRequest } from '@/lib/auth-server'
 import { rateLimit, getClientIP } from '@/lib/rate-limit'
+import { filterProfanity, containsURL } from '@/lib/content-filter'
 import { NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
@@ -17,12 +18,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Text must be between 5 and 280 characters' }, { status: 400 })
   }
 
+  if (containsURL(text)) {
+    return NextResponse.json({ error: 'URLs are not allowed in secrets.' }, { status: 400 })
+  }
+
+  const filtered = filterProfanity(text.trim())
   const user = await getUserFromRequest(req)
 
   const supabase = getSupabase()
   const { data, error } = await supabase
     .from('secrets')
-    .insert({ text, mood: mood ?? 'other', user_id: user?.id ?? null })
+    .insert({ text: filtered, mood: mood ?? 'other', user_id: user?.id ?? null })
     .select()
     .single()
 

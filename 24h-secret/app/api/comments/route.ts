@@ -1,6 +1,7 @@
 import { getSupabase } from '@/lib/supabase'
 import { getUserFromRequest } from '@/lib/auth-server'
 import { rateLimit, getClientIP } from '@/lib/rate-limit'
+import { filterProfanity, containsURL } from '@/lib/content-filter'
 import { NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
@@ -34,12 +35,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Comment must be 1–500 characters' }, { status: 400 })
   }
 
+  if (containsURL(text)) {
+    return NextResponse.json({ error: 'URLs are not allowed in comments.' }, { status: 400 })
+  }
+
+  const filtered = filterProfanity(text.trim())
   const user = await getUserFromRequest(req)
 
   const supabase = getSupabase()
   const { data, error } = await supabase
     .from('comments')
-    .insert({ secret_id, text: text.trim(), parent_id: parent_id ?? null, user_id: user?.id ?? null })
+    .insert({ secret_id, text: filtered, parent_id: parent_id ?? null, user_id: user?.id ?? null })
     .select('id, text, created_at, parent_id, user_id')
     .single()
 
