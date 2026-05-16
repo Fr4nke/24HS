@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
 import { getSupabaseBrowser } from '@/lib/supabase-browser'
+import AboutModal from '@/components/AboutModal'
 
 function PersonIcon() {
   return (
@@ -132,6 +133,7 @@ export default function AuthHeader() {
   const [loading, setLoading] = useState(true)
   const [showSignIn, setShowSignIn] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [showAbout, setShowAbout] = useState(false)
   const router = useRouter()
 
   async function fetchUnread(userId: string) {
@@ -177,44 +179,62 @@ export default function AuthHeader() {
 
   const btnClass = 'w-9 h-9 flex items-center justify-center rounded-full transition-colors'
 
+  const aboutBtn = (
+    <button
+      onClick={() => setShowAbout(true)}
+      title="Om 24h Secret"
+      className={`${btnClass} text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 text-base font-semibold`}
+    >
+      ?
+    </button>
+  )
+
   if (user) {
     return (
-      <div className="flex items-center gap-1">
-        <button onClick={() => router.push('/me')} title="My secrets" className={`${btnClass} text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800`}>
-          <PersonIcon />
-        </button>
-        <button onClick={() => router.push('/inbox')} title="Inbox" className={`${btnClass} relative text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800`}>
-          <InboxIcon />
-          {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 bg-violet-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none">
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
-          )}
-        </button>
-        <button onClick={signOut} title="Sign out" className={`${btnClass} text-zinc-600 hover:text-red-400 hover:bg-zinc-800`}>
-          <SignOutIcon />
-        </button>
-      </div>
+      <>
+        {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
+        <div className="flex items-center gap-1">
+          {aboutBtn}
+          <button onClick={() => router.push('/me')} title="My secrets" className={`${btnClass} text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800`}>
+            <PersonIcon />
+          </button>
+          <button onClick={() => router.push('/inbox')} title="Inbox" className={`${btnClass} relative text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800`}>
+            <InboxIcon />
+            {unreadCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 bg-violet-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+          <button onClick={signOut} title="Sign out" className={`${btnClass} text-zinc-600 hover:text-red-400 hover:bg-zinc-800`}>
+            <SignOutIcon />
+          </button>
+        </div>
+      </>
     )
   }
 
   return (
-    <div className="relative flex items-center gap-1">
-      <button
-        onClick={() => setShowSignIn((v) => !v)}
-        title="Sign in"
-        className={`${btnClass} ${showSignIn ? 'text-zinc-100 bg-zinc-800' : 'text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800'}`}
-      >
-        <PersonIcon />
-      </button>
-      <button
-        onClick={() => setShowSignIn((v) => !v)}
-        title="Sign in to access inbox"
-        className={`${btnClass} text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800`}
-      >
-        <InboxIcon />
-      </button>
-      {showSignIn && <SignInDropdown onClose={() => setShowSignIn(false)} />}
-    </div>
+    <>
+      {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
+      <div className="relative flex items-center gap-1">
+        {aboutBtn}
+        <button
+          onClick={() => setShowSignIn((v) => !v)}
+          title="Sign in"
+          className={`${btnClass} ${showSignIn ? 'text-zinc-100 bg-zinc-800' : 'text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800'}`}
+        >
+          <PersonIcon />
+        </button>
+        <button
+          onClick={() => setShowSignIn((v) => !v)}
+          title="Sign in to access inbox"
+          className={`${btnClass} text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800`}
+        >
+          <InboxIcon />
+        </button>
+        {showSignIn && <SignInDropdown onClose={() => setShowSignIn(false)} />}
+      </div>
+    </>
   )
 }
