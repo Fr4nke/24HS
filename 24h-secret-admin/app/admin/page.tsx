@@ -14,6 +14,24 @@ const FREE_TIER = {
   secrets_est_limit: 1_000_000,
 }
 
+type DayPoint = { date: string; real: number; synthetic: number }
+
+function buildTimeSeries(rows: { created_at: string; is_synthetic: boolean | null }[], days: number): DayPoint[] {
+  const map: Record<string, DayPoint> = {}
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now.getTime() - i * 86_400_000).toISOString().slice(0, 10)
+    map[d] = { date: d, real: 0, synthetic: 0 }
+  }
+  for (const r of rows) {
+    const d = r.created_at.slice(0, 10)
+    if (map[d]) {
+      if (r.is_synthetic) map[d].synthetic++
+      else map[d].real++
+    }
+  }
+  return Object.values(map)
+}
+
 async function fetchStats(db: ReturnType<typeof getAdminClient>) {
   const [
     { count: secretsTotal, error: dbError },
@@ -27,16 +45,16 @@ async function fetchStats(db: ReturnType<typeof getAdminClient>) {
     { count: commentsTotal },
     { data: reactionData },
   ] = await Promise.all([
-    db.from('secrets').select('*', { count: 'exact', head: true }),
-    db.from('secrets').select('*', { count: 'exact', head: true }).gte('created_at', ago(30)),
-    db.from('secrets').select('*', { count: 'exact', head: true }).gte('created_at', ago(7)),
-    db.from('secrets').select('*', { count: 'exact', head: true }).gte('created_at', ago(1)),
+    db.from('secrets').select('*', { count: 'exact', head: true }).eq('is_synthetic', false),
+    db.from('secrets').select('*', { count: 'exact', head: true }).eq('is_synthetic', false).gte('created_at', ago(30)),
+    db.from('secrets').select('*', { count: 'exact', head: true }).eq('is_synthetic', false).gte('created_at', ago(7)),
+    db.from('secrets').select('*', { count: 'exact', head: true }).eq('is_synthetic', false).gte('created_at', ago(1)),
     db.from('whispers').select('*', { count: 'exact', head: true }),
     db.from('whispers').select('*', { count: 'exact', head: true }).gte('created_at', ago(30)),
     db.from('whispers').select('*', { count: 'exact', head: true }).gte('created_at', ago(7)),
     db.from('whispers').select('*', { count: 'exact', head: true }).gte('created_at', ago(1)),
     db.from('comments').select('*', { count: 'exact', head: true }),
-    db.from('secrets').select('total_reactions'),
+    db.from('secrets').select('total_reactions').eq('is_synthetic', false),
   ])
 
   if (dbError) throw new Error(`Supabase feil (${dbError.code}): ${dbError.message || dbError.hint || JSON.stringify(dbError)}`)
@@ -51,7 +69,20 @@ async function fetchStats(db: ReturnType<typeof getAdminClient>) {
   const usersWeek = users.filter(u => u.created_at >= ago(7)).length
   const usersDay = users.filter(u => u.created_at >= ago(1)).length
 
-  // Try to get real DB stats via RPC (requires db_stats.sql to be run first)
+  // Synthetic counts
+  const { count: syntheticTotal } = await db.from('secrets').select('*', { count: 'exact', head: true }).eq('is_synthetic', true)
+
+  // Time series — last 30 days
+  const { data: timeRows } = await db
+    .from('secrets')
+    .select('created_at, is_synthetic')
+    .gte('created_at', ago(30))
+  const timeSeries30 = buildTimeSeries(
+    (timeRows ?? []) as { created_at: string; is_synthetic: boolean | null }[],
+    30
+  )
+
+  // Try to get real DB stats via RPC
   let dbSizeBytes: number | null = null
   let activeConnections: number | null = null
   let totalConnections: number | null = null
@@ -67,10 +98,12 @@ async function fetchStats(db: ReturnType<typeof getAdminClient>) {
 
   return {
     secrets: { total: secretsTotal ?? 0, month: secretsMonth ?? 0, week: secretsWeek ?? 0, day: secretsDay ?? 0 },
+    synthetic: { total: syntheticTotal ?? 0 },
     whispers: { total: whispersTotal ?? 0, month: whispersMonth ?? 0, week: whispersWeek ?? 0, day: whispersDay ?? 0 },
     comments: { total: commentsTotal ?? 0 },
     users: { total: usersTotal, month: usersMonth, week: usersWeek, day: usersDay },
     totalReactions,
+    timeSeries30,
     dbSizeBytes,
     activeConnections,
     totalConnections,
@@ -213,18 +246,32 @@ export default async function AdminPage({
               </div>
             </div>
 
+            {/* Secrets over time */}
+            <div>
+              <h2 style={{ margin: '0 0 12px', fontSize: 12, color: '#9a7070', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 500 }}>
+                📈 Secrets — last 30 days
+              </h2>
+              <div style={{ background: '#1a0a0d', border: '1px solid rgba(255,232,220,0.08)', borderRadius: 12, padding: '18px 20px' }}>
+                <BarChart data={stats.timeSeries30} />
+                <div style={{ display: 'flex', gap: 16, marginTop: 10, fontSize: 11, color: '#9a7070' }}>
+                  <span><span style={{ display: 'inline-block', width: 10, height: 10, background: '#FF7A4D', borderRadius: 2, marginRight: 4 }} />Real</span>
+                  <span><span style={{ display: 'inline-block', width: 10, height: 10, background: '#9a7070', borderRadius: 2, marginRight: 4, opacity: 0.5 }} />Synthetic</span>
+                </div>
+              </div>
+            </div>
+
             <StatGroup label="Users" rows={[
               ['Total', stats.users.total],
               ['Last 30 days', stats.users.month],
               ['Last 7 days', stats.users.week],
               ['Last 24h', stats.users.day],
             ]} icon="👤" />
-            <StatGroup label="Secrets" rows={[
+            <StatGroup label="Secrets (real only)" rows={[
               ['Total', stats.secrets.total],
               ['Last 30 days', stats.secrets.month],
               ['Last 7 days', stats.secrets.week],
               ['Last 24h', stats.secrets.day],
-            ]} icon="🤫" />
+            ]} icon="🤫" note={`+ ${stats.synthetic.total} synthetic`} />
             <StatGroup label="Whispers" rows={[
               ['Total', stats.whispers.total],
               ['Last 30 days', stats.whispers.month],
@@ -365,11 +412,12 @@ function DbBar({
   )
 }
 
-function StatGroup({ label, rows, icon }: { label: string; rows: [string, number][]; icon: string }) {
+function StatGroup({ label, rows, icon, note }: { label: string; rows: [string, number][]; icon: string; note?: string }) {
   return (
     <div>
-      <h2 style={{ margin: '0 0 12px', fontSize: 12, color: '#9a7070', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 500 }}>
+      <h2 style={{ margin: '0 0 12px', fontSize: 12, color: '#9a7070', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 8 }}>
         {icon} {label}
+        {note && <span style={{ fontSize: 11, textTransform: 'none', color: '#9a7070', opacity: 0.6, fontWeight: 400 }}>({note})</span>}
       </h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
         {rows.map(([period, value]) => (
@@ -385,5 +433,50 @@ function StatGroup({ label, rows, icon }: { label: string; rows: [string, number
         ))}
       </div>
     </div>
+  )
+}
+
+function BarChart({ data }: { data: DayPoint[] }) {
+  const W = 600, H = 100
+  const max = Math.max(...data.map(d => d.real + d.synthetic), 1)
+  const barW = Math.max(1, Math.floor(W / data.length) - 2)
+  const step = W / data.length
+
+  return (
+    <svg width="100%" viewBox={`0 0 ${W} ${H + 24}`} style={{ display: 'block' }}>
+      {data.map((d, i) => {
+        const totalH = Math.round(((d.real + d.synthetic) / max) * H)
+        const realH = Math.round((d.real / max) * H)
+        const synthH = totalH - realH
+        const x = Math.round(i * step)
+        const showLabel = data.length <= 14 || i % 5 === 0
+        const labelDate = d.date.slice(5) // MM-DD
+
+        return (
+          <g key={d.date}>
+            {synthH > 0 && (
+              <rect x={x} y={H - totalH} width={barW} height={synthH}
+                fill="#9a7070" opacity={0.35} rx={1} />
+            )}
+            {realH > 0 && (
+              <rect x={x} y={H - realH} width={barW} height={realH}
+                fill="#FF7A4D" rx={1} />
+            )}
+            {totalH === 0 && (
+              <rect x={x} y={H - 1} width={barW} height={1}
+                fill="rgba(255,232,220,0.06)" />
+            )}
+            {showLabel && (
+              <text x={x + barW / 2} y={H + 16} textAnchor="middle"
+                fontSize={7} fill="#9a7070">
+                {labelDate}
+              </text>
+            )}
+          </g>
+        )
+      })}
+      {/* zero line */}
+      <line x1={0} y1={H} x2={W} y2={H} stroke="rgba(255,232,220,0.08)" strokeWidth={1} />
+    </svg>
   )
 }
