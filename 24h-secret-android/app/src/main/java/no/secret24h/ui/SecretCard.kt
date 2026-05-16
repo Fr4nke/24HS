@@ -140,6 +140,14 @@ fun SecretCard(
                         }
                         Countdown(secret.expiresAt)
                     }
+                    secret.userId?.let { uid ->
+                        Text(
+                            "#${uid.take(8)}",
+                            fontSize = 10.sp,
+                            color = SmTextFaint,
+                            fontFamily = GeistFamily,
+                        )
+                    }
                 }
 
                 Row(

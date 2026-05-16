@@ -179,16 +179,21 @@ fun MySecretCard(secret: Secret, onRepublish: () -> Unit) {
                 }
             }
 
-            if (isExpired) {
-                Button(
-                    onClick = onRepublish,
-                    colors = ButtonDefaults.buttonColors(containerColor = SmAccent),
-                    shape = RoundedCornerShape(100.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                    modifier = Modifier.height(32.dp),
-                ) {
-                    Text("Republish", fontSize = 12.sp, color = Color.White, fontFamily = GeistFamily)
-                }
+            Button(
+                onClick = onRepublish,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isExpired) SmAccent else SmAccent.copy(alpha = 0.7f)
+                ),
+                shape = RoundedCornerShape(100.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                modifier = Modifier.height(32.dp),
+            ) {
+                Text(
+                    if (isExpired) "Republish" else "Extend 24h",
+                    fontSize = 12.sp,
+                    color = Color.White,
+                    fontFamily = GeistFamily,
+                )
             }
         }
     }
