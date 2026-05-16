@@ -21,3 +21,8 @@ node_modules/
 # General
 .DS_Store
 *.log
+
+# Tooling artifacts (kept out of repo)
+node_modules/
+package*.json
+set_secret.js
