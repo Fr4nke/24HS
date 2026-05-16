@@ -1,8 +1,24 @@
 import { createClient } from '@supabase/supabase-js'
+import { readFileSync } from 'fs'
 
-const db = createClient(
-  'https://jghtqgsnevtzxhscfirg.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnaHRxZ3NuZXZ0enhoc2NmaXJnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Njk4MzE3OSwiZXhwIjoyMDkyNTU5MTc5fQ.nYSIbEP7J8i4SGjCGx1avPJ0hnesUO_ZvK9iUnU0l0w',
+// Load from 24h-secret/.env.local — never hardcode credentials
+try {
+  for (const line of readFileSync('./24h-secret/.env.local', 'utf8').split('\n')) {
+    const eq = line.indexOf('=')
+    if (eq > 0 && !line.startsWith('#')) {
+      process.env[line.slice(0, eq).trim()] = line.slice(eq + 1).trim()
+    }
+  }
+} catch { /* file not found, rely on existing env */ }
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+  console.error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
+  process.exit(1)
+}
+
+const db = createClient(SUPABASE_URL, SERVICE_ROLE_KEY,
   { auth: { persistSession: false, autoRefreshToken: false } }
 )
 
