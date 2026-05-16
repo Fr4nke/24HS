@@ -44,7 +44,7 @@ async function fetchStats(db: ReturnType<typeof getAdminClient>) {
   const totalReactions = (reactionData ?? []).reduce((s: number, r: { total_reactions: number }) => s + (r.total_reactions ?? 0), 0)
 
   const { data: usersData } = await db.auth.admin.listUsers({ perPage: 1 })
-  const usersTotal = usersData?.total ?? 0
+  const usersTotal = (usersData as { total?: number } | null)?.total ?? 0
   const { data: allUsers } = await db.auth.admin.listUsers({ perPage: 1000 })
   const users = allUsers?.users ?? []
   const usersMonth = users.filter(u => u.created_at >= ago(30)).length
