@@ -54,11 +54,14 @@ async function fetchStats(db: ReturnType<typeof getAdminClient>) {
   // Try to get real DB stats via RPC (requires db_stats.sql to be run first)
   let dbSizeBytes: number | null = null
   let activeConnections: number | null = null
+  let totalConnections: number | null = null
   try {
     const { data } = await db.rpc('get_db_stats')
     if (data) {
-      dbSizeBytes = (data as { db_size_bytes: number }).db_size_bytes
-      activeConnections = (data as { active_connections: number }).active_connections
+      const d = data as { db_size_bytes: number; active_connections: number; total_connections: number }
+      dbSizeBytes = d.db_size_bytes
+      activeConnections = d.active_connections
+      totalConnections = d.total_connections
     }
   } catch { /* function not set up yet */ }
 
@@ -70,6 +73,7 @@ async function fetchStats(db: ReturnType<typeof getAdminClient>) {
     totalReactions,
     dbSizeBytes,
     activeConnections,
+    totalConnections,
   }
 }
 
@@ -183,10 +187,10 @@ export default async function AdminPage({
                     ⚠️ Databasestørrelse ikke tilgjengelig — kjør <code style={{ color: '#FF7A4D' }}>db_stats.sql</code> i Supabase SQL Editor for å aktivere
                   </div>
                 )}
-                {stats.activeConnections !== null && (
+                {stats.totalConnections !== null && (
                   <DbBar
-                    label="Tilkoblinger"
-                    value={stats.activeConnections}
+                    label={`Tilkoblinger — ${stats.activeConnections ?? 0} aktive, ${stats.totalConnections} totalt (12–18 er Supabase interne)`}
+                    value={stats.totalConnections}
                     limit={FREE_TIER.connections}
                     unit=""
                     warn="Nær maks — vurder connection pooling eller Pro-plan"
